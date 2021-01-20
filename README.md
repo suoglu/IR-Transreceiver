@@ -38,6 +38,34 @@ Module `ir_decoder` decodes the received IR signal. Width of the decoded code co
 
 After a reset `ir_decoder` checks for the start condition, which is an arbitrary low followed by an arbitrary high. After receiving start condition, `ir_decoder` starts to decode. Decoded bit value determined by counting the duration of the `rx` high pulses and stored at the negative edge of `rx`. Durations less than 990µs interpreted as `0`, durations between 1ms to 1.99ms interpreted as `1`. If the duration is longer then 2ms end condition is generated and no data is decoded. Exact durations depends on the period of `clk_100kHz`, given values assume period of 10µs. If length of the received data is shorter than 8 bits or no data is received, repeat press signal, `repeat_press`,  is generated and `code` is not updated. When a new code is decoded, `newCode` pulse with a length of a one `clk` is generated.
 
+### `RGBremoteController` module
+
+**General Description:**
+
+`RGBremoteController` can be used to control a RGB LED with a remote controller. Implemented remote has following buttons:
+
+- 2 Brightness button
+- On button, Off button
+- Red, Green, Blue and White buttons
+- 4x3 custom color buttons
+- 3 diffrent mode buttons (Flash, Strobe and Smooth)
+- Mode switching button
+
+`RGBremoteController` requires `ir_decoder` module to operate and includes following submodules:
+
+|  Submodule   | Purpose |
+| :----: |  ------  |
+| `RGBremoteMapper` | Decodes button number from `code` |
+| `rgb_led_controller8` | PWM RGB pins to control color |
+| `brightnessControllerRGB` | Modulate PWMed RGB pins to adjust brightness |
+| `pulseGen` | Generate pulses to change color in Flash and Strobe mode (~3,3Hz) |
+
+Smooth mode is not implemented. Repeated presses are not recognized. Colors can be edited with local parameters; `WHITE`, `REDx`, `GREENx` and `BLUEx`.
+
+**`RGBremoteMapper` module:**
+
+`RGBremoteMapper` maps `code`s to button numbers. Mapping can be changed with local parameters `btn_y_x`, where `x` and `y` are coordinates with `btn_0_0` is the top left button. Unknown `code`s mapped as button number `31`.
+
 ## Interface Description
 
 ### `ir_decoder` Interface
@@ -59,6 +87,31 @@ I: Input  O: Output
 - If received code is longer than `CODEBITS`, LSBs are kept.
 - `clk_100kHz` should be approximately 100kHz, some variation does not affect functionality. During simulation and testing 97.656kHz clock is used.
 
+### `RGBremoteController` Interface
+
+|   Port   | Type | Width |  Description |
+| :------: | :----: | :----: |  ------  |
+| `clk` | I | 1 | System Clock |
+| `rst` | I | 1 | System Reset |
+| `code` | I | 32 | Decoded code |
+| `newCode` | I | 1 | Indicates a new code decoded |
+| `red_o` | O | 1 | Red LED pin |
+| `green_o` | O | 1 | Green LED pin |
+| `blue_o` | O | 1 | Blue LED pin |
+| `an` | I | 1 | LEDs are connected in anode mode |
+
+I: Input  O: Output
+
+**`RGBremoteMapper`:**
+
+|   Port   | Type | Width |  Description |
+| :------: | :----: | :----: |  ------  |
+| `code` | I | 32 | Decoded code |
+| `valid` | O | 1 | Indicates the `code` is valid |
+| `button` | O | 5 | Button Number, `31` if unvalid |
+
+I: Input  O: Output
+
 ## Simulation
 
 ### `ir_decoder` Simulation
@@ -73,18 +126,23 @@ Module `ir_decoder` tested with [ir_decoder_test.v](Test/ir_decoder_test.v) and 
 
 Module `irdec_test` can also be used as IR remote decoder to extract 32 bit codes from IR remotes, and see them.
 
+### `RGBremoteController` Test
+
+Module `RGBremoteController` tested with [rgbRemoteTest.v](Test/rgbRemoteTest.v) and [Arty-A7-100_0.xdc](Test/Arty-A7-100_0.xdc). LD0 controlled with the remote. All of the buttons are tested.
+
 ## Status Information
 
 **Last Simulation:**
 
 - `ir_decoder`: 18 January 2021, with [Vivado Simulator](https://www.xilinx.com/products/design-tools/vivado/simulator.html)
 
-**Last Test:** -
+**Last Test:**
 
 - `ir_decoder`: 18 January 2021, on [Digilent Basys 3](https://reference.digilentinc.com/reference/programmable-logic/basys-3/reference-manual)
+- `RGBremoteController`: 20 January 2021, on [Digilent Arty A7](https://reference.digilentinc.com/reference/programmable-logic/arty-a7/reference-manual)
 
 ## Issues
 
 **`ir_decoder`:**
 
-- Rarely module stucks and needs reset to work again.
+- Rarely module stucks and needs reset to work again, happens when buttons pressed rapidly.

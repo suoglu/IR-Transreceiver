@@ -4,7 +4,7 @@
  * ------------------------------------------------ *
  * File        : rgbLEDremote.v                     *
  * Author      : Yigit Suoglu                       *
- * Last Edit   : /01/2021                         *
+ * Last Edit   : 20/01/2021                         *
  * ------------------------------------------------ *
  * Description : Remote controler for a RGB LED     *
  * ------------------------------------------------ *
@@ -53,11 +53,11 @@ module RGBremoteController(
   reg [2:0] brightness;
   wire red_c, green_c, blue_c, r_o, g_o, b_o;
   wire pulse, pulseEn;
-  reg strobeOn;
+  reg [1:0] strobeCounter;
 
   always@*
     begin
-      if(~strobeOn & (mode == STROBE))
+      if(|strobeCounter & (mode == STROBE))
         {red_dynamic, green_dynamic, blue_dynamic} = 24'h0;
       else
         case(colorCounter)
@@ -90,7 +90,7 @@ module RGBremoteController(
         end
       else
         begin
-          if((mode == FLASH) | (~strobeOn & (mode == STROBE)))
+          if((mode == FLASH) | (~|strobeCounter & (mode == STROBE)))
             colorCounter <= (colorCounter == 4'd14) ? 4'd0 : (colorCounter + 4'd1);
         end
     end
@@ -100,11 +100,11 @@ module RGBremoteController(
     begin
       if(rst)
         begin
-          strobeOn <= 8'd1;
+          strobeCounter <= 8'd1;
         end
       else
         begin
-          strobeOn <= strobeOn ^ (mode == STROBE);
+          strobeCounter <= strobeCounter + {1'd1, (mode == STROBE)};
         end
     end
   
@@ -357,7 +357,7 @@ module brightnessControllerRGB(sync, rst, rgb_i, rgb_o, brightness, an);
         end
       else
         begin
-          counter <= counter + 3'd0;
+          counter <= counter + 3'd1;
         end
     end
 endmodule
