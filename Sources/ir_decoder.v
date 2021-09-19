@@ -1,15 +1,16 @@
 /* ------------------------------------------------ *
- * Title       : IR Decoder v1.0                    *
+ * Title       : IR Decoder v1.1                    *
  * Project     : IR Transreceiver                   *
  * ------------------------------------------------ *
  * File        : ir_decoder.v                       *
  * Author      : Yigit Suoglu                       *
- * Last Edit   : 17/01/2021                         *
+ * Last Edit   : 19/09/2021                         *
  * ------------------------------------------------ *
  * Description : Decoder module for a IR receivers  *
  * ------------------------------------------------ *
  * Revisions                                        *
  *     v1      : Inital version                     *
+ *     v1.1    : Reformat & mv clk div to new file  *
  * ------------------------------------------------ */
 
 module ir_decoder#(parameter CODEBITS = 32)(
@@ -42,48 +43,26 @@ module ir_decoder#(parameter CODEBITS = 32)(
   assign newCode = inFINISH;
 
   //State transactions
-  always@(posedge clk or posedge rst)
-    begin
-      rx_d <= rx;
-      if(rst)
-        begin
-          state <= IDLE;
-        end
-      else
-        begin
-          case(state)
-            IDLE:
-              begin
-                state <= (~rx) ? START : state;
-              end
-            START:
-              begin
-                state <= (rx_d & ~rx) ? DECODING : state;
-              end
-            DECODING:
-              begin
-                state <= (finCOND) ? FINISH : state;
-              end
-            FINISH:
-              begin
-                state <= IDLE;
-              end
-          endcase
-        end
-    end
+  always@(posedge clk or posedge rst) begin
+    rx_d <= rx;
+    if(rst) begin
+      state <= IDLE;
+    end else case(state)
+          IDLE: state <= (~rx) ? START : state;
+         START: state <= (rx_d & ~rx) ? DECODING : state;
+      DECODING: state <= (finCOND) ? FINISH : state;
+         INISH: state <= IDLE;
+    endcase
+  end
   
   //Count received edges
-  always@(posedge rx)
-    begin
-      if(inSTART)
-        begin
-          edgeCount <= 3'd0;
-        end
-      else
-        begin
-          edgeCount <= edgeCount + {2'd0, inDECODING & ~&edgeCount};
-        end
+  always@(posedge rx) begin
+    if(inSTART) begin
+        edgeCount <= 3'd0;
+    end else begin
+        edgeCount <= edgeCount + {2'd0, inDECODING & ~&edgeCount};
     end
+  end
    
   //Rx derivative signals
   assign bitVAL = (rx_counter > 8'd99);
@@ -92,13 +71,12 @@ module ir_decoder#(parameter CODEBITS = 32)(
 
   //Count rx pulse leghts
   //0-99: O; 100-199: 1; 200<: end condition
-  always@(posedge clk_100kHz)
-    begin
-      if(~rx)
-        rx_counter <= 8'd0;
-      else
-        rx_counter <= rx_counter + {7'd0,(~&rx_counter & inDECODING & rx)};
-    end
+  always@(posedge clk_100kHz) begin
+    if(~rx)
+      rx_counter <= 8'd0;
+    else
+      rx_counter <= rx_counter + {7'd0,(~&rx_counter & inDECODING & rx)};
+  end
 
   //Store codeBUFF and repeat cond to output
   always@(posedge inFINISH)
@@ -108,143 +86,10 @@ module ir_decoder#(parameter CODEBITS = 32)(
     end
   
   //Get code
-  always@(negedge rx or posedge inSTART)
-    begin
-      if(inSTART)
-        begin
-          codeBUFF <= {CODEBITS{1'b0}};
-        end
-      else
-        begin //Also add reset here?
-          codeBUFF <= (inDECODING) ? {codeBUFF[(CODEBITS-2):0], bitVAL} : {CODEBITS{1'b0}};
-        end
-    end
+  always@(negedge rx or posedge inSTART) begin
+    if(inSTART)
+      codeBUFF <= {CODEBITS{1'b0}};
+    else
+      codeBUFF <= (inDECODING) ? {codeBUFF[(CODEBITS-2):0], bitVAL} : {CODEBITS{1'b0}};
+  end
 endmodule
-
-module clkGen97k656hz(
-  input clk_i,
-  input rst,
-  output reg clk_o);
-  reg [8:0] clk_a;
-
-  //50MHz
-  always@(posedge clk_i or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[0] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[0] <= ~clk_a[0];
-        end
-    end
-  //25MHz
-  always@(posedge clk_a[0] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[1] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[1] <= ~clk_a[1];
-        end
-    end
-  //12.5MHz
-  always@(posedge clk_a[1] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[2] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[2] <= ~clk_a[2];
-        end
-    end
-  //6.25MHz
-  always@(posedge clk_a[2] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[3] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[3] <= ~clk_a[3];
-        end
-    end
-  //3.125MHz
-  always@(posedge clk_a[3] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[4] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[4] <= ~clk_a[4];
-        end
-    end
-  //1.5625MHz
-  always@(posedge clk_a[4] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[5] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[5] <= ~clk_a[5];
-        end
-    end
-  //781.25kHz
-  always@(posedge clk_a[5] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[6] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[6] <= ~clk_a[6];
-        end
-    end
-  //390.625kHz
-  always@(posedge clk_a[6] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[7] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[7] <= ~clk_a[7];
-        end
-    end
-  //195.312kHz
-  always@(posedge clk_a[7] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_a[8] <= 1'b0;
-        end
-      else
-        begin
-          clk_a[8] <= ~clk_a[8];
-        end
-    end
-  //97.656kHz
-  always@(posedge clk_a[8] or posedge rst)
-    begin
-      if(rst)
-        begin
-          clk_o <= 1'b0;
-        end
-      else
-        begin
-          clk_o <= ~clk_o;
-        end
-    end
-endmodule//clkGen

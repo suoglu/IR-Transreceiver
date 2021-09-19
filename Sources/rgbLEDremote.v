@@ -4,7 +4,7 @@
  * ------------------------------------------------ *
  * File        : rgbLEDremote.v                     *
  * Author      : Yigit Suoglu                       *
- * Last Edit   : 20/01/2021                         *
+ * Last Edit   : 19/09/2021                         *
  * ------------------------------------------------ *
  * Description : Remote controler for a RGB LED     *
  * ------------------------------------------------ *
@@ -55,207 +55,112 @@ module RGBremoteController(
   wire pulse, pulseEn;
   reg [1:0] strobeCounter;
 
-  always@*
-    begin
-      if(|strobeCounter & (mode == STROBE))
-        {red_dynamic, green_dynamic, blue_dynamic} = 24'h0;
-      else
-        case(colorCounter)
-          4'd0: {red_dynamic, green_dynamic, blue_dynamic} = RED;
-          4'd1: {red_dynamic, green_dynamic, blue_dynamic} = RED1;
-          4'd2: {red_dynamic, green_dynamic, blue_dynamic} = RED2;
-          4'd3: {red_dynamic, green_dynamic, blue_dynamic} = RED3;
-          4'd4: {red_dynamic, green_dynamic, blue_dynamic} = RED4;
-          4'd5: {red_dynamic, green_dynamic, blue_dynamic} = GREEN;
-          4'd6: {red_dynamic, green_dynamic, blue_dynamic} = GREEN1;
-          4'd7: {red_dynamic, green_dynamic, blue_dynamic} = GREEN2;
-          4'd8: {red_dynamic, green_dynamic, blue_dynamic} = GREEN3;
-          4'd9: {red_dynamic, green_dynamic, blue_dynamic} = GREEN4;
-          4'd10: {red_dynamic, green_dynamic, blue_dynamic} = BLUE;
-          4'd11: {red_dynamic, green_dynamic, blue_dynamic} = BLUE1;
-          4'd12: {red_dynamic, green_dynamic, blue_dynamic} = BLUE2;
-          4'd13: {red_dynamic, green_dynamic, blue_dynamic} = BLUE3;
-          4'd14: {red_dynamic, green_dynamic, blue_dynamic} = BLUE4;
-          default: {red_dynamic, green_dynamic, blue_dynamic} = 24'h0;
-        endcase
-        
-    end
+  always@* begin
+    if(|strobeCounter & (mode == STROBE))
+      {red_dynamic, green_dynamic, blue_dynamic} = 24'h0;
+    else case(colorCounter)
+         4'd0: {red_dynamic, green_dynamic, blue_dynamic} = RED;
+         4'd1: {red_dynamic, green_dynamic, blue_dynamic} = RED1;
+         4'd2: {red_dynamic, green_dynamic, blue_dynamic} = RED2;
+         4'd3: {red_dynamic, green_dynamic, blue_dynamic} = RED3;
+         4'd4: {red_dynamic, green_dynamic, blue_dynamic} = RED4;
+         4'd5: {red_dynamic, green_dynamic, blue_dynamic} = GREEN;
+         4'd6: {red_dynamic, green_dynamic, blue_dynamic} = GREEN1;
+         4'd7: {red_dynamic, green_dynamic, blue_dynamic} = GREEN2;
+         4'd8: {red_dynamic, green_dynamic, blue_dynamic} = GREEN3;
+         4'd9: {red_dynamic, green_dynamic, blue_dynamic} = GREEN4;
+        4'd10: {red_dynamic, green_dynamic, blue_dynamic} = BLUE;
+        4'd11: {red_dynamic, green_dynamic, blue_dynamic} = BLUE1;
+        4'd12: {red_dynamic, green_dynamic, blue_dynamic} = BLUE2;
+        4'd13: {red_dynamic, green_dynamic, blue_dynamic} = BLUE3;
+        4'd14: {red_dynamic, green_dynamic, blue_dynamic} = BLUE4;
+      default: {red_dynamic, green_dynamic, blue_dynamic} = 24'h0;
+    endcase
+  end
   
   //Color counter
-  always@(negedge pulse or posedge rst)
-    begin
-      if(rst)
-        begin
-          colorCounter <= 4'd0;
-        end
-      else
-        begin
-          if((mode == FLASH) | (~|strobeCounter & (mode == STROBE)))
-            colorCounter <= (colorCounter == 4'd14) ? 4'd0 : (colorCounter + 4'd1);
-        end
+  always@(negedge pulse or posedge rst) begin
+    if(rst) begin
+      colorCounter <= 4'd0;
+    end else begin
+      if((mode == FLASH) | (~|strobeCounter & (mode == STROBE)))
+        colorCounter <= (colorCounter == 4'd14) ? 4'd0 : (colorCounter + 4'd1);
     end
+  end
   
   //strobeOff
-  always@(negedge pulse or posedge rst)
-    begin
-      if(rst)
-        begin
-          strobeCounter <= 8'd1;
-        end
-      else
-        begin
-          strobeCounter <= strobeCounter + {1'd1, (mode == STROBE)};
-        end
+  always@(negedge pulse or posedge rst) begin
+    if(rst) begin
+      strobeCounter <= 8'd1;
+    end else begin
+      strobeCounter <= strobeCounter + {1'd1, (mode == STROBE)};
     end
+  end
   
   //Update color regs
-  always@(negedge newCode or posedge rst)
-    begin
-      if(rst)
-        begin
-          {red_store, blue_store, green_store} <= WHITE;
-        end
-      else
-        begin
-          case(button)
-            5'd4:
-              begin
-                {red_store, blue_store, green_store} <= RED;
-              end
-            5'd5:
-              begin
-                {red_store, blue_store, green_store} <= GREEN;
-              end
-            5'd6:
-              begin
-                {red_store, blue_store, green_store} <= BLUE;
-              end
-            5'd7:
-              begin
-                {red_store, blue_store, green_store} <= WHITE;
-              end
-            5'd8:
-              begin
-                {red_store, blue_store, green_store} <= RED1;
-              end
-            5'd9:
-              begin
-                {red_store, blue_store, green_store} <= GREEN1;
-              end
-            5'd10:
-              begin
-                {red_store, blue_store, green_store} <= BLUE1;
-              end
-            5'd12:
-              begin
-                {red_store, blue_store, green_store} <= RED2;
-              end
-            5'd13:
-              begin
-                {red_store, blue_store, green_store} <= GREEN2;
-              end
-            5'd14:
-              begin
-                {red_store, blue_store, green_store} <= BLUE2;
-              end
-            5'd16:
-              begin
-                {red_store, blue_store, green_store} <= RED3;
-              end
-            5'd17:
-              begin
-                {red_store, blue_store, green_store} <= GREEN3;
-              end
-            5'd18:
-              begin
-                {red_store, blue_store, green_store} <= BLUE3;
-              end
-            5'd20:
-              begin
-                {red_store, blue_store, green_store} <= RED4;
-              end
-            5'd21:
-              begin
-                {red_store, blue_store, green_store} <= GREEN4;
-              end
-            5'd22:
-              begin
-                {red_store, blue_store, green_store} <= BLUE4;
-              end
-          endcase
-          
-        end
-    end
+  always@(negedge newCode or posedge rst)begin
+      if(rst) begin
+        {red_store, blue_store, green_store} <= WHITE;
+      end else case(button)
+         5'd4: {red_store, blue_store, green_store} <= RED;
+         5'd5: {red_store, blue_store, green_store} <= GREEN;
+         5'd6: {red_store, blue_store, green_store} <= BLUE;
+         5'd7: {red_store, blue_store, green_store} <= WHITE;
+         5'd8: {red_store, blue_store, green_store} <= RED1;
+         5'd9: {red_store, blue_store, green_store} <= GREEN1;
+        5'd10: {red_store, blue_store, green_store} <= BLUE1;
+        5'd12: {red_store, blue_store, green_store} <= RED2;
+        5'd13: {red_store, blue_store, green_store} <= GREEN2;
+        5'd14: {red_store, blue_store, green_store} <= BLUE2;
+        5'd16: {red_store, blue_store, green_store} <= RED3;
+        5'd17: {red_store, blue_store, green_store} <= GREEN3;
+        5'd18:{red_store, blue_store, green_store} <= BLUE3;
+        5'd20: {red_store, blue_store, green_store} <= RED4;
+        5'd21: {red_store, blue_store, green_store} <= GREEN4;
+        5'd22: {red_store, blue_store, green_store} <= BLUE4;
+      endcase
+  end
 
   //Handle mode
-  always@(negedge newCode or posedge rst)
-    begin
-      if(rst)
-        begin
-          mode <= 2'd0;
-        end
-      else
-        begin
-          if(~&button & lightOn & (5'd3 < button))
-            begin
-              if(button == 5'd23)
-                mode <= mode + 2'd1;
-              else
-                case(button)
-                  5'd11:
-                    begin
-                      mode <= FLASH;
-                    end
-                  5'd15:
-                    begin
-                      mode <= STROBE;
-                    end
-                  5'd19:
-                    begin
-                      mode <= SMOOTH;
-                    end
-                  default:
-                    begin
-                      mode <= COLOR;
-                    end
-                endcase
-            end
-        end
+  always@(negedge newCode or posedge rst) begin
+    if(rst)begin
+      mode <= 2'd0;
+    end else begin
+      if(~&button & lightOn & (5'd3 < button)) begin
+        if(button == 5'd23)
+          mode <= mode + 2'd1;
+        else case(button)
+            5'd11: mode <= FLASH;
+            5'd15: mode <= STROBE;
+            5'd19: mode <= SMOOTH;
+          default: mode <= COLOR;
+        endcase
+      end
     end
+  end
   
   //handle brightness
-  always@(negedge newCode or posedge rst)
-    begin
-      if(rst)
-        begin
-          brightness <= 3'd5;
-        end
-      else
-        begin
-          if(~|button)
-            begin
-              brightness <= brightness + {2'd0,~&brightness};
-            end
-          else if(button == 5'd1)
-            begin
-              brightness <= brightness - {2'd0, |brightness};
-            end
-        end
+  always@(negedge newCode or posedge rst) begin
+    if(rst) begin
+      brightness <= 3'd5;
+    end else begin
+      if(~|button) begin
+        brightness <= brightness + {2'd0,~&brightness};
+      end else if(button == 5'd1) begin
+        brightness <= brightness - {2'd0, |brightness};
+      end
     end
+  end
   
   //Handle lightOn
-  always@(negedge newCode or posedge rst)
-    begin
-      if(rst)
-        begin
-          lightOn <= 1'b1;
-        end
-      else
-        case(lightOn)
-          1'b1: lightOn <= (button == 5'd2) ? 1'b0 : lightOn;
-          1'b0: lightOn <= (button == 5'd3) ? 1'b1 : lightOn;
-        endcase
-    end
+  always@(negedge newCode or posedge rst) begin
+    if(rst) begin
+      lightOn <= 1'b1;
+    end else case(lightOn)
+      1'b1: lightOn <= (button == 5'd2) ? 1'b0 : lightOn;
+      1'b0: lightOn <= (button == 5'd3) ? 1'b1 : lightOn;
+    endcase
+  end
   
   //Mode handle & power off
   assign {red_o, green_o, blue_o} = {(r_o & lightOn), (g_o & lightOn), (b_o & lightOn)};
@@ -347,19 +252,17 @@ module brightnessControllerRGB(sync, rst, rgb_i, rgb_o, brightness, an);
   output [2:0] rgb_o;
   wire pass;
   reg [2:0] counter;
+
   assign rgb_o = (pass) ? rgb_i : {3{an}};
   assign pass = ~(brightness < counter);
-  always@(posedge sync or posedge rst)
-    begin
-      if(rst)
-        begin
-          counter <= 3'd0;
-        end
-      else
-        begin
-          counter <= counter + 3'd1;
-        end
+
+  always@(posedge sync or posedge rst) begin
+    if(rst) begin
+      counter <= 3'd0;
+    end else begin
+      counter <= counter + 3'd1;
     end
+  end
 endmodule
 
 module rgb_led_controller8(clk, rst, rcolor_i, gcolor_i, bcolor_i, sync, half, r_o, g_o, b_o, an);
@@ -382,42 +285,34 @@ module rgb_led_controller8(clk, rst, rcolor_i, gcolor_i, bcolor_i, sync, half, r
   assign sync = ~|counter;
 
   //Counter for full cycle
-  always @(posedge clk or posedge rst) 
-    begin
-      if(rst)
-        begin
-          counter <= 8'd0;
-        end
-      else
-        begin
-          counter <= counter + 8'd1;
-        end
+  always @(posedge clk or posedge rst) begin
+    if(rst) begin
+      counter <= 8'd0;
+    end else begin
+      counter <= counter + 8'd1;
     end
+  end
 
   //Only change color in new cycles
-  always@(posedge sync or posedge rst)
-    begin
-      if(rst)
-        begin
-          rcolor_reg <= rcolor_i;
-          gcolor_reg <= gcolor_i;
-          bcolor_reg <= bcolor_i;
-        end
-      else
-        begin
-          rcolor_reg <= rcolor_i;
-          gcolor_reg <= gcolor_i;
-          bcolor_reg <= bcolor_i;
-        end
+  always@(posedge sync or posedge rst) begin
+    if(rst) begin
+      rcolor_reg <= rcolor_i;
+      gcolor_reg <= gcolor_i;
+      bcolor_reg <= bcolor_i;
+    end else begin
+      rcolor_reg <= rcolor_i;
+      gcolor_reg <= gcolor_i;
+      bcolor_reg <= bcolor_i;
     end
+  end
   
   //Drive LED pins
-  always@(posedge clk)
-    begin //       All 1s          All 0s         New cycle           Pulse end
-        red <= (&rcolor_reg) | ((|rcolor_reg) & ((~|counter) | ((counter != rcolor_reg) & red)));
-       blue <= (&bcolor_reg) | ((|bcolor_reg) & ((~|counter) | ((counter != bcolor_reg) & blue)));
-      green <= (&gcolor_reg) | ((|gcolor_reg) & ((~|counter) | ((counter != gcolor_reg) & green)));
-    end
+  always@(posedge clk)begin 
+        //       All 1s          All 0s         New cycle           Pulse end
+      red <= (&rcolor_reg) | ((|rcolor_reg) & ((~|counter) | ((counter != rcolor_reg) & red)));
+     blue <= (&bcolor_reg) | ((|bcolor_reg) & ((~|counter) | ((counter != bcolor_reg) & blue)));
+    green <= (&gcolor_reg) | ((|gcolor_reg) & ((~|counter) | ((counter != gcolor_reg) & green)));
+  end
 endmodule//RGB LED controller with 8 bit resolution
 
 module pulseGen(clk, rst, en, pulse);
@@ -427,15 +322,11 @@ module pulseGen(clk, rst, en, pulse);
 
   assign pulse = (counter == 25'd29_999_999);
 
-  always@(posedge clk or posedge rst)
-    begin
-      if(rst)
-        begin
-          counter <= 25'd0;
-        end
-      else
-        begin
-          counter <= (pulse) ? 25'd0 : (counter + {24'd0, en});
-        end
-    end 
+  always@(posedge clk or posedge rst) begin
+    if(rst) begin
+      counter <= 25'd0;
+    end else begin
+      counter <= (pulse) ? 25'd0 : (counter + {24'd0, en});
+      end
+  end 
 endmodule
