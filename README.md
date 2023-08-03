@@ -10,6 +10,7 @@
 6. Test
 7. Status Information
 8. Issues
+9. Licence
 
 [![Repo on GitLab](https://img.shields.io/badge/repo-GitLab-6C488A.svg)](https://gitlab.com/suoglu/ir-transreceiver)
 [![Repo on GitHub](https://img.shields.io/badge/repo-GitHub-3D76C2.svg)](https://github.com/suoglu/IR-Transreceiver)
@@ -146,3 +147,7 @@ Module `RGBremoteController` tested with [rgbRemoteTest.v](Test/rgbRemoteTest.v)
 **`ir_decoder`:**
 
 - Rarely module stucks and needs reset to work again, happens when buttons pressed rapidly.
+
+## License
+
+CERN Open Hardware Licence Version 2 - Weakly Reciprocal

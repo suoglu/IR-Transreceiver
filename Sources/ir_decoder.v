@@ -5,6 +5,7 @@
  * File        : ir_decoder.v                       *
  * Author      : Yigit Suoglu                       *
  * Last Edit   : 19/09/2021                         *
+ * Licence     : CERN-OHL-W                         *
  * ------------------------------------------------ *
  * Description : Decoder module for a IR receivers  *
  * ------------------------------------------------ *

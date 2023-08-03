@@ -5,6 +5,7 @@
  * File        : clkGen97k656hz.v                   *
  * Author      : Yigit Suoglu                       *
  * Last Edit   : 19/09/2021                         *
+ * Licence     : CERN-OHL-W                         *
  * ------------------------------------------------ *
  * Description : Divides 100MHz clock to 97,656 khz *
  *               via logic                          *
